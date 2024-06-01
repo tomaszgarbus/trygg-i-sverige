@@ -31,7 +31,6 @@ def _read_single_table_to_df(wb: Workbook, table_id: str) -> pd.DataFrame:
     """
     # start = 'B5'
     # end = 'G338'
-    print(table_id)
     ws = wb[f'Tabell {table_id}']
     values = list(map(lambda x: x[1:], list(ws.values)[4:338]))
     idx = list(map(lambda x: x[0], values[1:]))
@@ -40,13 +39,15 @@ def _read_single_table_to_df(wb: Workbook, table_id: str) -> pd.DataFrame:
 
 
 def _build_df_for_year(
-        wb: Workbook, year: str, table_series: int) -> pd.DataFrame:
+        wb: Workbook, year: str, table_series: int,
+        numeric: bool = True) -> pd.DataFrame:
     """Builds a df with kommuns/läns as rows and crimes as columns.
 
     Ignores confidence intervals.
     Args:
         @year: Year in the "yyyy-yyyy" format as in original spreadsheet.
         @table_series: Either 2 or 3.
+        @numeric: If true
     """
     assert year in ["2016-2017", "2018-2019", "2020-2021"]
     year = year.replace("-", "–")
@@ -62,13 +63,24 @@ def _build_df_for_year(
             result = table
         else:
             result = result.join(table)
+    if numeric:
+        result = result.apply(lambda x: pd.to_numeric(x, errors='coerce'))
     return result
 
 
+def default_crime_exposure_table() -> pd.DataFrame:
+    """Default crime exposure table for last year."""
+    return _build_df_for_year(
+        load_workbook(_FNAME),
+        "2020-2021",
+        2
+    )
+
+
 if __name__ == '__main__':
-    wb = load_workbook(_FNAME)
+    # wb = load_workbook(_FNAME)
     # print(wb.sheetnames)
     # print(_read_table_descriptions(wb))
     # print(_read_single_table_to_df(wb, "2.12"))
-    print(_build_df_for_year(wb, "2020-2021", 2))
+    # print(_build_df_for_year(wb, "2020-2021", 2))
     pass

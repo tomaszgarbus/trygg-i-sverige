@@ -1,2 +1,6 @@
+# For utils
 pandas
 openpyxl
+# For web app
+dash
+plotly
