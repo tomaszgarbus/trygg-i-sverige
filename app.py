@@ -53,15 +53,53 @@ def discrete_color_background_bins(df: pd.DataFrame, column: str) -> dict:
     return styles
 
 
+def build_tooltip(value: any, row: dict, column: dict, df: pd.DataFrame) -> str:
+    """Produces tooltip markdown for a single cell."""
+    if type(value) == float:
+        nlt = df[df[column] < value][column].size
+        neq = df[df[column] == value][column].size
+        ngt = df[df[column] > value][column].size
+        rank = ngt + neq
+        all = nlt + neq + ngt
+        return (
+            f"**{row['Plats']} / {column.strip()}**\n"
+            f"{rank}. farligaste av {all}\n"
+        )
+    else:
+        return f"**{row['Plats']}**"
+
+
 data_dict = data.reset_index(names='Plats').to_dict('records', index=True)
+tooltip_data = [
+        {
+            column: {
+                'value': build_tooltip(value, row, column, data),
+                'type': 'markdown'
+            }
+            for column, value in row.items()
+        } for row in data_dict
+    ]
 
 app.layout = html.Div([
     html.H1(
         'Utsatthet för brott i år 2020-2021'
     ),
+    'TODO list:',
+    html.Ul(
+        [
+            html.Li('Good tooltips'),
+            html.Li('Filter cities/counties/all'),
+            html.Li('Apply filtering rules to computed tooltips'),
+            html.Li('Separate tab for table 3.x series'),
+            html.Li('Show ranking number row'),
+            html.Li('Use Bootstrap 5 for styling'),
+            html.Li('Center everything'),
+        ]
+    ),
     dash_table.DataTable(
-        data_dict,
-        columns,
+        data=data_dict,
+        columns=columns,
+        tooltip_data=tooltip_data,
         sort_action="native",
         page_size = 400,
         style_data_conditional=list(itertools.chain.from_iterable([
