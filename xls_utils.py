@@ -49,7 +49,7 @@ def _build_df_for_year(
         @table_series: Either 2 or 3.
         @numeric: If true
     """
-    assert year in ["2016-2017", "2018-2019", "2020-2021"]
+    assert year in ["2016-2017", "2018-2019", "2020-2021", "2021-2022"]
     year = year.replace("-", "–")
     assert table_series in [2, 3]
     table_ids = [k for k in _read_table_descriptions(wb).keys()
@@ -74,6 +74,15 @@ def default_crime_exposure_table() -> pd.DataFrame:
         load_workbook(_FNAME),
         "2020-2021",
         2
+    )
+
+
+def default_crime_fear_table() -> pd.DataFrame:
+    """Default crime fear table for last year."""
+    return _build_df_for_year(
+        load_workbook(_FNAME),
+        "2021-2022",
+        3
     )
 
 
