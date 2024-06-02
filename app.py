@@ -5,10 +5,12 @@ from xls_utils import default_crime_exposure_table, default_crime_fear_table
 app = Dash(__name__)
 tab2x = TableTab(
     default_crime_exposure_table(),
+    'utsatthet',
     'Utsatthet för brott i år 2020-2021'
 )
 tab3x = TableTab(
     default_crime_fear_table(),
+    'otrygghet',
     'Otrygghet och oro för brott i år 2021-2022'
 )
 
@@ -17,7 +19,7 @@ app.layout = html.Div([
     html.Ul(
         [
             html.Li('Anchor header row'),
-            html.Li('Fix tooltips'),
+            html.Li('Speed up recomputation of tooltips'),
             html.Li('Show city sizes in tooltips'),
             html.Li('Filter cities/counties/all'),
             html.Li('Filter by city sizes'),

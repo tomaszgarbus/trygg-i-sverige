@@ -2,7 +2,7 @@
 Dash tab for table of series 2.x or 3.x
 """
 import pandas as pd
-from dash import Dash, html, dcc, dash_table
+from dash import html, dash_table, Input, Output, callback
 import itertools
 import plotly.express as px
 
@@ -56,9 +56,15 @@ def _build_tooltip(value: any, row: dict, column: dict, df: pd.DataFrame) -> str
 
 
 class TableTab:
-    def __init__(self, data: pd.DataFrame, header: str):
-        self._header = header
+    def __init__(self, data: pd.DataFrame, table_id: str, header: str):
         self._data = data
+        self._table_id = table_id
+        self._header = header
+        self._recompute()
+        self._register_sort_callback()
+    
+    def _recompute(self):
+        """Recomputes all cached values and aggregations from data."""
         self._numeric_columns = [{
             'id': col,
             'name': col,
@@ -74,22 +80,41 @@ class TableTab:
         self._data_dict = self._data.reset_index(names='Plats').to_dict(
             'records', index=True)
         self._tooltip_data = [
-                {
-                    column: {
-                        'value': _build_tooltip(value, row, column, data),
-                        'type': 'markdown'
-                    }
-                    for column, value in row.items()
-                } for row in self._data_dict
-            ]
+            {
+                column: {
+                    'value': _build_tooltip(
+                        value, row, column, self._data),
+                    'type': 'markdown'
+                }
+                for column, value in row.items()
+            } for row in self._data_dict
+        ]
+
+    def _update_table(self, sort_by):
+        if sort_by:
+            self._data = self._data.sort_values(
+                sort_by[0]['column_id'],
+                ascending=sort_by[0]['direction'] == 'asc',
+                inplace=False
+            )
+            self._recompute()
+        return self._data_dict, self._tooltip_data
     
+    def _register_sort_callback(self) -> None:
+        self._sort_callback = callback(
+            Output(self._table_id, 'data'),
+            Output(self._table_id, 'tooltip_data'),
+            Input(self._table_id, 'sort_by')
+        )(self._update_table)
+
     def _build_data_table(self) -> dash_table.DataTable:
         """Constructs the DataTable for this tab."""
         return dash_table.DataTable(
+            id=self._table_id,
             data=self._data_dict,
             columns=self._columns,
             tooltip_data=self._tooltip_data,
-            sort_action="native",
+            sort_action="custom",
             page_size = 400,
             style_data_conditional=list(itertools.chain.from_iterable([
                 _discrete_color_background_bins(self._data, col['name'])
