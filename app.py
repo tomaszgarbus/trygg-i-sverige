@@ -47,7 +47,7 @@ def discrete_color_background_bins(df: pd.DataFrame, column: str) -> dict:
                     ).format(column=column, min_bound=ranges[i-1], max_bound=ranges[i]),
                     'column_id': column
                 },
-                'backgroundColor': bg_color,
+                'background-color': bg_color,
                 'color': color,
             })
     return styles
@@ -69,9 +69,12 @@ app.layout = html.Div([
             for col in numeric_columns
         ])),
         css=[{'selector': 'table', 'rule': 'table-layout: fixed'}],
-        style_data={
-            'whiteSpace': 'normal',
+        style_cell={
+            'white-space': 'normal',
             'height': 'auto',
+            'overflow-wrap': 'break-word',
+            'word-break': 'break-all'
+            # 'overflow': 
         },
     )
 ], style={
