@@ -87,13 +87,14 @@ app.layout = html.Div([
     'TODO list:',
     html.Ul(
         [
-            html.Li('Good tooltips'),
+            html.Li('Anchor header row'),
+            html.Li('Fix tooltips'),
+            html.Li('Show city sizes in tooltips'),
             html.Li('Filter cities/counties/all'),
+            html.Li('Filter by city sizes'),
             html.Li('Apply filtering rules to computed tooltips'),
             html.Li('Separate tab for table 3.x series'),
             html.Li('Show ranking number row'),
-            html.Li('Use Bootstrap 5 for styling'),
-            html.Li('Center everything'),
         ]
     ),
     dash_table.DataTable(
