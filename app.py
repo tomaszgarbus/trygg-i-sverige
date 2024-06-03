@@ -19,6 +19,7 @@ app.layout = html.Div([
     html.Ul(
         [
             html.Li('Anchor header row'),
+            html.Li('Anchor SAMTLIGA'),
             html.Li('Speed up recomputation of tooltips'),
             html.Li('Show city sizes in tooltips'),
             html.Li('Filter cities/counties/all'),

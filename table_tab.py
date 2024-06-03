@@ -39,31 +39,38 @@ def _discrete_color_background_bins(df: pd.DataFrame, column: str) -> dict:
     return styles
 
 
-def _build_tooltip(value: any, row: dict, column: dict, df: pd.DataFrame) -> str:
-    """Produces tooltip markdown for a single cell."""
-    if type(value) == float:
-        nlt = df[df[column] < value][column].size
-        neq = df[df[column] == value][column].size
-        ngt = df[df[column] > value][column].size
-        rank = ngt + neq
-        all = nlt + neq + ngt
-        return (
-            f"**{row['Plats']} / {column.strip()}**\n"
-            f"{rank}. farligaste av {all}\n"
-        )
-    else:
-        return f"**{row['Plats']}**"
-
-
 class TableTab:
     def __init__(self, data: pd.DataFrame, table_id: str, header: str):
         self._data = data
         self._table_id = table_id
         self._header = header
+        self._tooltip_cache = {}
         self._recompute()
         self._register_sort_callback()
-    
-    def _recompute(self):
+
+    def _build_tooltip(
+            self, value: any, row: dict, column: dict,
+            invalidate_cache = False) -> str:
+        """Produces tooltip markdown for a single cell."""
+        key = row['Plats'], column
+        if invalidate_cache:
+            self._tooltip_cache.pop(key)
+        if key not in self._tooltip_cache:
+          if type(value) == float:
+              nlt = self._data[self._data[column] < value][column].size
+              neq = self._data[self._data[column] == value][column].size
+              ngt = self._data[self._data[column] > value][column].size
+              rank = ngt + neq
+              all = nlt + neq + ngt
+              self._tooltip_cache[key] = (
+                  f"**{row['Plats']} / {column.strip()}**\n"
+                  f"{rank}. farligaste av {all}\n"
+              )
+          else:
+              self._tooltip_cache[key] = f"**{row['Plats']}**"
+        return self._tooltip_cache[key]
+
+    def _recompute(self, invalidate_tooltip_cache = False):
         """Recomputes all cached values and aggregations from data."""
         self._numeric_columns = [{
             'id': col,
@@ -82,8 +89,8 @@ class TableTab:
         self._tooltip_data = [
             {
                 column: {
-                    'value': _build_tooltip(
-                        value, row, column, self._data),
+                    'value': self._build_tooltip(
+                        value, row, column, invalidate_tooltip_cache),
                     'type': 'markdown'
                 }
                 for column, value in row.items()
