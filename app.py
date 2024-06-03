@@ -18,7 +18,6 @@ app.layout = html.Div([
     'TODO list:',
     html.Ul(
         [
-            html.Li('use bootstrap css'),
             html.Li('Show city sizes in tooltips'),
             html.Li('Filter cities/counties/all'),
             html.Li('Filter by city sizes'),
@@ -38,7 +37,8 @@ app.layout = html.Div([
         label=tab3x.label()),
     ])
 ], style={
-    'width': '96%'
+    'width': '96%',
+    'margin': 'auto'
 })
 
 if __name__ == '__main__':
