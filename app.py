@@ -18,9 +18,7 @@ app.layout = html.Div([
     'TODO list:',
     html.Ul(
         [
-            html.Li('Anchor header row'),
-            html.Li('Anchor SAMTLIGA'),
-            html.Li('Speed up recomputation of tooltips'),
+            html.Li('use bootstrap css'),
             html.Li('Show city sizes in tooltips'),
             html.Li('Filter cities/counties/all'),
             html.Li('Filter by city sizes'),

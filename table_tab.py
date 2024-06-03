@@ -6,6 +6,9 @@ from dash import html, dash_table, Input, Output, callback
 import itertools
 import plotly.express as px
 
+# Label for the row with overall country-wide stats.
+_TOTAL_ROW_LABEL = 'SAMTLIGA (16–84 år)'
+
 def _discrete_color_background_bins(df: pd.DataFrame, column: str) -> dict:
     """Builds the conditional style for column.
 
@@ -38,6 +41,15 @@ def _discrete_color_background_bins(df: pd.DataFrame, column: str) -> dict:
             })
     return styles
 
+def _bold_text_in_summary_row() -> dict:
+    """Builds a conditional style for the "SAMTLIGA" column.
+    """
+    return {
+        'if': {
+            'row_index': 0
+        },
+        'font-weight': 'bold'
+    }
 
 class TableTab:
     def __init__(self, data: pd.DataFrame, table_id: str, header: str):
@@ -99,11 +111,15 @@ class TableTab:
 
     def _update_table(self, sort_by):
         if sort_by:
-            self._data = self._data.sort_values(
-                sort_by[0]['column_id'],
-                ascending=sort_by[0]['direction'] == 'asc',
-                inplace=False
-            )
+            # Don't sort the first row ("SAMTLIGA").
+            self._data = pd.concat([
+                self._data[self._data.index == _TOTAL_ROW_LABEL],
+                self._data[self._data.index != _TOTAL_ROW_LABEL].sort_values(
+                    sort_by[0]['column_id'],
+                    ascending=sort_by[0]['direction'] == 'asc',
+                    inplace=False
+                )
+            ])
             self._recompute()
         return self._data_dict, self._tooltip_data
     
@@ -126,14 +142,29 @@ class TableTab:
             style_data_conditional=list(itertools.chain.from_iterable([
                 _discrete_color_background_bins(self._data, col['name'])
                 for col in self._numeric_columns
-            ])),
-            css=[{'selector': 'table', 'rule': 'table-layout: fixed'}],
+            ])) + [_bold_text_in_summary_row()],
+            # css=[
+            #     {'selector': '.dash-table-container', 'rule': 'height: 100% !important;'},
+            # ],
             style_cell={
                 'white-space': 'normal',
                 'height': 'auto',
+                'width': 90,
                 'overflow-wrap': 'break-word',
                 'word-break': 'break-all'
             },
+            style_table={
+                # TODO: Make it 100% instead
+                'height': 800,
+                'max-height': '100%'
+            },
+            fixed_rows={
+                'headers': True,
+                'data': 1,
+            },
+            style_header={
+                'font-weight': 'bold'
+            }
         )
 
     def label(self) -> str:
