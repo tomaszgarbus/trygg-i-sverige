@@ -2,7 +2,7 @@
 Dash tab for table of series 2.x or 3.x
 """
 import pandas as pd
-from dash import html, dash_table, Input, Output, callback
+from dash import html, dash_table, Input, Output, callback, dcc
 import itertools
 import plotly.express as px
 
@@ -53,12 +53,40 @@ def _bold_text_in_summary_row() -> dict:
 
 class TableTab:
     def __init__(self, data: pd.DataFrame, table_id: str, header: str):
+        self._all_data = data
         self._data = data
         self._table_id = table_id
         self._header = header
         self._tooltip_cache = {}
         self._recompute()
         self._register_sort_callback()
+
+    def _county_data(self) -> pd.DataFrame:
+        """Filters self._data to leave only counties."""
+        return self._all_data[self._all_data.index.str.contains(
+            'län$'
+        )]
+
+    def _district_data(self) -> pd.DataFrame:
+        """Filters self._data to include only districts of Stockholm."""
+        return self._all_data[
+            self._all_data.index.str.contains('Stadsdelsomr.')
+        ]
+    
+    def _city_data(self) -> pd.DataFrame:
+        """Filters self._data to include only cities."""
+        return self._all_data[
+            ~self._all_data.index.str.contains(
+                '(SAMTLIGA)|(län$)|(Stadsdelsomr.)')
+        ]
+    
+    def _get_selected_data(self, selection: str) -> pd.DataFrame:
+        """Gets selected data from the checkbox value"""
+        return {
+            'Counties': self._county_data,
+            'Stockholm Districts': self._district_data,
+            'Cities': self._district_data
+        }[selection]()
 
     def _build_tooltip(
             self, value: any, row: dict, column: dict,
@@ -91,7 +119,7 @@ class TableTab:
             'format': {
                 'specifier': '.2f'
             }
-        } for col in self._data]
+        } for col in self._all_data]
         self._columns = [{
             'id': 'Plats',
             'name': 'Plats'
@@ -109,11 +137,21 @@ class TableTab:
             } for row in self._data_dict
         ]
 
-    def _update_table(self, sort_by):
+    def _update_table(self, sort_by, filters):
+        print(filters)
+        # First apply filtering.
+        selected_data = [
+            # Country-wide-summary
+            self._data[self._data.index == _TOTAL_ROW_LABEL],
+        ] + [self._get_selected_data(s) for s in filters]
+        self._data = pd.concat(selected_data)
+        # Now apply sorting.
         if sort_by:
             # Don't sort the first row ("SAMTLIGA").
             self._data = pd.concat([
+                # Row 0:
                 self._data[self._data.index == _TOTAL_ROW_LABEL],
+                # Rows 1:
                 self._data[self._data.index != _TOTAL_ROW_LABEL].sort_values(
                     sort_by[0]['column_id'],
                     ascending=sort_by[0]['direction'] == 'asc',
@@ -127,7 +165,8 @@ class TableTab:
         self._sort_callback = callback(
             Output(self._table_id, 'data'),
             Output(self._table_id, 'tooltip_data'),
-            Input(self._table_id, 'sort_by')
+            Input(self._table_id, 'sort_by'),
+            Input(f'{self._table_id}_filters', 'value'),
         )(self._update_table)
 
     def _build_data_table(self) -> dash_table.DataTable:
@@ -176,6 +215,11 @@ class TableTab:
         return html.Div([
             html.H1(
                 self._header
+            ),
+            dcc.Checklist(
+                options=['Counties', 'Stockholm Districts', 'Cities'],
+                value=['Counties', 'Stockholm Districts', 'Cities'],
+                id=f'{self._table_id}_filters'
             ),
             self._build_data_table()
         ])
