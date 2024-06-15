@@ -14,6 +14,42 @@ tab3x = TableTab(
     'Otrygghet och oro för brott i år 2021-2022'
 )
 
+intro = html.Div([
+    html.P('Avsnittet om utsatthet för brott omfattar följande brottstyper:'),
+    html.Ul([
+        html.Li(['brott mot enskild person:',
+          html.Ul([
+              html.Li('kort-/kreditbedrägeri'),
+              html.Li('försäljningsbedrägeri'),
+              html.Li('fickstöld'),
+              html.Li('personrån'),
+              html.Li('sexualbrott'),
+              html.Li('misshandel'),
+              html.Li('hot'),
+              html.Li('trakasserier'),
+              html.Li('nätkränkning'),
+          ])
+        ])
+    ])
+    # """
+    #   Avsnittet om utsatthet för brott omfattar följande brottstyper:
+    #   • brott mot enskild person:
+    #   - kort-/kreditbedrägeri
+    #   - försäljningsbedrägeri
+    #   - fickstöld
+    #   - personrån
+    #   - sexualbrott
+    #   - misshandel
+    #   - hot
+    #   - trakasserier10
+    #   - nätkränkning
+    #   • egendomsbrott mot hushåll:
+    #   - cykelstöld
+    #   - bilstöld
+    #   - stöld ur eller från fordon
+    #   - bostadsinbrott"""
+])
+
 app.layout = html.Div([
     'TODO list:',
     html.Ul(
@@ -26,6 +62,7 @@ app.layout = html.Div([
             html.Li('Show ranking number row'),
         ]
     ),
+    intro,
     dcc.Tabs([
         dcc.Tab([
             tab2x.build_tab_contents()

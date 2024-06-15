@@ -138,7 +138,6 @@ class TableTab:
         ]
 
     def _update_table(self, sort_by, filters):
-        print(filters)
         # First apply filtering.
         selected_data = [
             # Country-wide-summary
@@ -158,7 +157,7 @@ class TableTab:
                     inplace=False
                 )
             ])
-            self._recompute()
+        self._recompute()
         return self._data_dict, self._tooltip_data
     
     def _register_sort_callback(self) -> None:
