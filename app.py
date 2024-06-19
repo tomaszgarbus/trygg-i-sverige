@@ -29,37 +29,24 @@ intro = html.Div([
               html.Li('trakasserier'),
               html.Li('nätkränkning'),
           ])
+        ]),
+        html.Li(['egendomsbrott mot hushåll:',
+            html.Ul([
+                html.Li('cykelstöld'),
+                html.Li('bilstöld'),
+                html.Li('stöld ur eller från fordon'),
+                html.Li('bostadsinbrott'),
+            ])
         ])
     ])
-    # """
-    #   Avsnittet om utsatthet för brott omfattar följande brottstyper:
-    #   • brott mot enskild person:
-    #   - kort-/kreditbedrägeri
-    #   - försäljningsbedrägeri
-    #   - fickstöld
-    #   - personrån
-    #   - sexualbrott
-    #   - misshandel
-    #   - hot
-    #   - trakasserier10
-    #   - nätkränkning
-    #   • egendomsbrott mot hushåll:
-    #   - cykelstöld
-    #   - bilstöld
-    #   - stöld ur eller från fordon
-    #   - bostadsinbrott"""
 ])
 
 app.layout = html.Div([
     'TODO list:',
     html.Ul(
         [
-            html.Li('Show city sizes in tooltips'),
-            html.Li('Filter cities/counties/all'),
-            html.Li('Filter by city sizes'),
-            html.Li('Apply filtering rules to computed tooltips'),
-            html.Li('Separate tab for table 3.x series'),
             html.Li('Show ranking number row'),
+            html.Li('Fix table size to be 100% height'),
         ]
     ),
     intro,

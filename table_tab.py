@@ -58,6 +58,7 @@ class TableTab:
         self._table_id = table_id
         self._header = header
         self._tooltip_cache = {}
+        self._filters = None
         self._recompute()
         self._register_sort_callback()
 
@@ -83,9 +84,9 @@ class TableTab:
     def _get_selected_data(self, selection: str) -> pd.DataFrame:
         """Gets selected data from the checkbox value"""
         return {
-            'Counties': self._county_data,
-            'Stockholm Districts': self._district_data,
-            'Cities': self._district_data
+            'Län': self._county_data,
+            'Stockholm stadsdelsomr.': self._district_data,
+            'Städer': self._city_data
         }[selection]()
 
     def _build_tooltip(
@@ -96,10 +97,20 @@ class TableTab:
         if invalidate_cache:
             self._tooltip_cache.pop(key)
         if key not in self._tooltip_cache:
-          if type(value) == float:
-              nlt = self._data[self._data[column] < value][column].size
-              neq = self._data[self._data[column] == value][column].size
-              ngt = self._data[self._data[column] > value][column].size
+          if row['Plats'] == _TOTAL_ROW_LABEL and column != 'Plats':
+              self._tooltip_cache[key] = f"**Genomsnittlig utsatthet för {column.strip()}**\n"
+          elif pd.isna(value):
+            self._tooltip_cache[key] = f"Saknar data"
+          elif type(value) == float:
+              nlt = self._data[
+                  (self._data.index != _TOTAL_ROW_LABEL) &
+                  (self._data[column] < value)][column].size
+              neq = self._data[
+                  (self._data.index != _TOTAL_ROW_LABEL) &
+                  (self._data[column] == value)][column].size
+              ngt = self._data[
+                  (self._data.index != _TOTAL_ROW_LABEL) &
+                  (self._data[column] > value)][column].size
               rank = ngt + neq
               all = nlt + neq + ngt
               self._tooltip_cache[key] = (
@@ -143,6 +154,8 @@ class TableTab:
             # Country-wide-summary
             self._data[self._data.index == _TOTAL_ROW_LABEL],
         ] + [self._get_selected_data(s) for s in filters]
+        invalidate_tooltip_cache = self._filters != filters
+        self._filters = filters
         self._data = pd.concat(selected_data)
         # Now apply sorting.
         if sort_by:
@@ -157,7 +170,7 @@ class TableTab:
                     inplace=False
                 )
             ])
-        self._recompute()
+        self._recompute(invalidate_tooltip_cache)
         return self._data_dict, self._tooltip_data
     
     def _register_sort_callback(self) -> None:
@@ -216,8 +229,8 @@ class TableTab:
                 self._header
             ),
             dcc.Checklist(
-                options=['Counties', 'Stockholm Districts', 'Cities'],
-                value=['Counties', 'Stockholm Districts', 'Cities'],
+                options=['Län', 'Stockholm stadsdelsomr.', 'Städer'],
+                value=['Län', 'Stockholm stadsdelsomr.', 'Städer'],
                 id=f'{self._table_id}_filters'
             ),
             self._build_data_table()
