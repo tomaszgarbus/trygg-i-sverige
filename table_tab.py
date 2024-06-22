@@ -9,6 +9,7 @@ import plotly.express as px
 # Label for the row with overall country-wide stats.
 _TOTAL_ROW_LABEL = 'SAMTLIGA (16–84 år)'
 
+
 def _discrete_color_background_bins(df: pd.DataFrame, column: str) -> dict:
     """Builds the conditional style for column.
 
@@ -59,6 +60,8 @@ class TableTab:
         self._header = header
         self._tooltip_cache = {}
         self._filters = None
+        self._all_columns = list(filter(
+            lambda x: x != 'Plats', list(data.columns.values)))
         self._recompute()
         self._register_sort_callback()
 
@@ -148,14 +151,14 @@ class TableTab:
             } for row in self._data_dict
         ]
 
-    def _update_table(self, sort_by, filters):
+    def _update_table(self, sort_by, area_filters, type_filters):
         # First apply filtering.
         selected_data = [
             # Country-wide-summary
             self._data[self._data.index == _TOTAL_ROW_LABEL],
-        ] + [self._get_selected_data(s) for s in filters]
-        invalidate_tooltip_cache = self._filters != filters
-        self._filters = filters
+        ] + [self._get_selected_data(s) for s in area_filters]
+        invalidate_tooltip_cache = self._filters != area_filters
+        self._filters = area_filters
         self._data = pd.concat(selected_data)
         # Now apply sorting.
         if sort_by:
@@ -178,7 +181,8 @@ class TableTab:
             Output(self._table_id, 'data'),
             Output(self._table_id, 'tooltip_data'),
             Input(self._table_id, 'sort_by'),
-            Input(f'{self._table_id}_filters', 'value'),
+            Input(f'{self._table_id}_area_filters', 'value'),
+            Input(f'{self._table_id}_type_filters', 'value'),
         )(self._update_table)
 
     def _build_data_table(self) -> dash_table.DataTable:
@@ -228,10 +232,25 @@ class TableTab:
             html.H1(
                 self._header
             ),
-            dcc.Checklist(
-                options=['Län', 'Stockholm stadsdelsomr.', 'Städer'],
-                value=['Län', 'Stockholm stadsdelsomr.', 'Städer'],
-                id=f'{self._table_id}_filters'
-            ),
+            html.Div([
+                'Visa område:',
+                dcc.Checklist(
+                    options=['Län', 'Stockholm stadsdelsomr.', 'Städer'],
+                    value=['Län', 'Stockholm stadsdelsomr.', 'Städer'],
+                    id=f'{self._table_id}_area_filters'
+                )
+            ]),
+            html.Div([
+                'Visa brottstyper/oroligheter:',
+                dcc.Checklist(
+                    options=[
+                        self._all_columns
+                    ],
+                    value=[
+                        self._all_columns
+                    ],
+                    id=f'{self._table_id}_type_filters'
+                )
+            ]),
             self._build_data_table()
         ])

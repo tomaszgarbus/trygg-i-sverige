@@ -46,6 +46,7 @@ app.layout = html.Div([
     html.Ul(
         [
             html.Li('Show ranking number row'),
+            html.Li('Allow to collapse subcategories on the table'),
             html.Li('Fix table size to be 100% height'),
         ]
     ),
