@@ -9,6 +9,14 @@ import plotly.express as px
 # Label for the row with overall country-wide stats.
 _TOTAL_ROW_LABEL = 'SAMTLIGA (16–84 år)'
 
+def _default_enabled_columns(all_columns: list[str]) -> list[str]:
+    enabled = [
+        'Brott mot enskild person',
+        'Egendomsbrott mot hushåll',
+        'Oro över brottsligheten i samhället',
+        'Orons påverkan på livskvaliteten'
+    ]
+    return list(filter(lambda e: e in all_columns, enabled))
 
 def _discrete_color_background_bins(df: pd.DataFrame, column: str) -> dict:
     """Builds the conditional style for column.
@@ -64,6 +72,7 @@ class TableTab:
             lambda x: x != 'Plats', list(data.columns.values)))
         self._recompute()
         self._register_sort_callback()
+        self._register_type_filters_callback()
 
     def _county_data(self) -> pd.DataFrame:
         """Filters self._data to leave only counties."""
@@ -151,7 +160,7 @@ class TableTab:
             } for row in self._data_dict
         ]
 
-    def _update_table(self, sort_by, area_filters, type_filters):
+    def _update_table(self, sort_by, area_filters):
         # First apply filtering.
         selected_data = [
             # Country-wide-summary
@@ -176,14 +185,26 @@ class TableTab:
         self._recompute(invalidate_tooltip_cache)
         return self._data_dict, self._tooltip_data
     
+    def _update_hidden_columns(self, type_filters):
+        hidden_columns = []
+        for c in self._all_columns:
+            if c not in type_filters:
+                hidden_columns.append(c)
+        return hidden_columns
+
     def _register_sort_callback(self) -> None:
         self._sort_callback = callback(
             Output(self._table_id, 'data'),
             Output(self._table_id, 'tooltip_data'),
             Input(self._table_id, 'sort_by'),
             Input(f'{self._table_id}_area_filters', 'value'),
-            Input(f'{self._table_id}_type_filters', 'value'),
         )(self._update_table)
+    
+    def _register_type_filters_callback(self) -> None:
+        self._type_filters_callback = callback(
+            Output(self._table_id, 'hidden_columns'),
+            Input(f'{self._table_id}_type_filters', 'value'),
+        )(self._update_hidden_columns)
 
     def _build_data_table(self) -> dash_table.DataTable:
         """Constructs the DataTable for this tab."""
@@ -201,6 +222,7 @@ class TableTab:
             # css=[
             #     {'selector': '.dash-table-container', 'rule': 'height: 100% !important;'},
             # ],
+            css=[{"selector": ".show-hide", "rule": "display: none"}],
             style_cell={
                 'white-space': 'normal',
                 'height': 'auto',
@@ -219,7 +241,7 @@ class TableTab:
             },
             style_header={
                 'font-weight': 'bold'
-            }
+            },
         )
 
     def label(self) -> str:
@@ -233,24 +255,24 @@ class TableTab:
                 self._header
             ),
             html.Div([
-                'Visa område:',
-                dcc.Checklist(
-                    options=['Län', 'Stockholm stadsdelsomr.', 'Städer'],
-                    value=['Län', 'Stockholm stadsdelsomr.', 'Städer'],
-                    id=f'{self._table_id}_area_filters'
-                )
-            ]),
-            html.Div([
-                'Visa brottstyper/oroligheter:',
-                dcc.Checklist(
-                    options=[
-                        self._all_columns
-                    ],
-                    value=[
-                        self._all_columns
-                    ],
-                    id=f'{self._table_id}_type_filters'
-                )
-            ]),
+                html.Div([
+                    html.Div([
+                        'Visa område:',
+                        dcc.Checklist(
+                            options=['Län', 'Stockholm stadsdelsomr.', 'Städer'],
+                            value=['Län', 'Stockholm stadsdelsomr.', 'Städer'],
+                            id=f'{self._table_id}_area_filters'
+                        )
+                    ], className='col-4'),
+                    html.Div([
+                        'Visa brottstyper/oroligheter:',
+                        dcc.Checklist(
+                            options=self._all_columns,
+                            value=_default_enabled_columns(self._all_columns),
+                            id=f'{self._table_id}_type_filters'
+                        )
+                    ], className='col-8')
+                ], className='row'),
+            ], className='container'),
             self._build_data_table()
         ])
