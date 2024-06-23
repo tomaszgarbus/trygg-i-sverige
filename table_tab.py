@@ -257,7 +257,7 @@ class TableTab:
             html.Div([
                 html.Div([
                     html.Div([
-                        'Visa område:',
+                        html.B('Visa område:'),
                         dcc.Checklist(
                             options=['Län', 'Stockholm stadsdelsomr.', 'Städer'],
                             value=['Län', 'Stockholm stadsdelsomr.', 'Städer'],
@@ -265,7 +265,7 @@ class TableTab:
                         )
                     ], className='col-4'),
                     html.Div([
-                        'Visa brottstyper/oroligheter:',
+                        html.B('Visa brottstyper/oroligheter:'),
                         dcc.Checklist(
                             options=self._all_columns,
                             value=_default_enabled_columns(self._all_columns),
