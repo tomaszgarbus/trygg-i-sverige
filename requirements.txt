@@ -4,3 +4,5 @@ openpyxl
 # For web app
 dash
 plotly
+# For deployment
+gunicorn
